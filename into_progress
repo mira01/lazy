@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check if ticket_id argument is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <ticket_id>"
+    exit 1
+fi
+# Variables
+TICKET_ID=$1
+
+if [ -z "$JIRA_URL" ]; then
+    echo "JIRA_URL env variable expected"
+    exit 1
+fi
+if [ -z "$JIRA_USERNAME" ]; then
+    echo "JIRA_USERNAME env variable expected"
+    exit 1
+fi
+if [ -z "$JIRA_API_TOKEN" ]; then
+    echo "JIRA_API_TOKEN env variable expected"
+    exit 1
+fi
+API_ENDPOINT="/rest/api/2/issue/${TICKET_ID}/transitions"
+
+curl -S -u "$JIRA_USERNAME:$JIRA_API_TOKEN" -X POST -H "Content-Type: application/json" -d '{"transition": {"id": 201}}' "$JIRA_URL$API_ENDPOINT"

@@ -1,0 +1,13 @@
+#!/bin/zsh
+set -euo pipefail
+
+FALLBACK_FILENAME=~/ticket_id
+FILENAME=${~TICKET_FILE:-${~FALLBACK_FILENAME}}
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <ticket_id>"
+    exit 1
+fi
+TICKET_ID=$1
+
+echo "$TICKET_ID" > ${~FILENAME}

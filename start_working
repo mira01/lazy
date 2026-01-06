@@ -1,0 +1,16 @@
+#/bin/sh
+set -euo pipefail
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <jira-ticket>"
+    exit 1
+fi
+
+TICKET=$1
+
+confirm echo 1\; echo 2\; echo 3
+confirm git co master\; git fetch\; git ff
+confirm set_ticket $TICKET
+confirm git co -b $(branch_name $TICKET)
+confirm git ci --allow-empty -m\"$(commit_message $TICKET)\"
+confirm into_progress $TICKET

@@ -1,0 +1,10 @@
+set -euo pipefail
+
+if [ "$#" -lt 1 ]; then
+    TICKET_ID=$(ticket);
+else
+    TICKET_ID=$1
+fi
+
+SUMMARY=$(jira_data $TICKET_ID | jq -r '.summary' | tr -cs '[:alnum:]' '-' | sed -e 's/-\+/-/g' | sed -e's/-*$//g' | sed -e's/^-*//g')
+echo mce/$TICKET_ID-$SUMMARY

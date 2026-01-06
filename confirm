@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Check if a command was provided as an argument
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <command>"
+    exit 1
+fi
+
+GREY="\e[90m"
+RESET="\e[0m"
+
+# Store the command as a single string
+COMMAND="$*"
+TEMP_FILE=$(mktemp)
+
+# Function to edit the command in a temporary file
+edit_command() {
+    echo "$COMMAND" > "$TEMP_FILE"
+    ${EDITOR:-${VISUAL:-nano}} "$TEMP_FILE"
+    COMMAND=$(<"$TEMP_FILE")
+}
+
+# Main loop for user interaction
+while true; do
+    echo -e "\tCommand to be run:"
+    echo "$COMMAND"
+    echo -ne "\tDo you want to (r)un / (y)es, (e)dit, (s)kip, or (a)bort?"
+    read -p " " choice
+    case "$choice" in
+        [rRyY])
+            # Run the command
+            if eval "$COMMAND"; then
+                exit 0
+            else
+                # Report failure without exiting
+                echo -e "\tError: Command failed to execute" >&2
+            fi
+            ;;
+        [eE])
+            # Edit the command
+            edit_command
+            ;;
+        [sS])
+            # Skip the command
+            exit 0
+            ;;
+        [aA])
+            # Abort
+            exit 1
+            ;;
+        *)
+            echo "\tInvalid choice. Please select (r)un/(y)es, (e)dit, (s)kip, or (a)bort."
+            ;;
+    esac
+done
+
+# Clean up temporary file
+rm "$TEMP_FILE"
