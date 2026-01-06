@@ -1,0 +1,38 @@
+#!/bin/bash
+# walks up the directory tree and asks user if one of the directories corresponds to name
+# if no such name is found it allows entering custom name
+
+get_component_name() {
+    local current_dir=$(pwd)
+    local component_name=""
+    local ignore_dirs=("src" "assets" "node_modules" "bin" "obj" "build")  # Add other directories to ignore as needed
+
+    # Loop to walk up the directory path
+    while [ "$current_dir" != "/" ]; do
+        local dir_name=$(basename "$current_dir")
+        
+        # Check if the directory is in the ignore list
+        if [[ ! " ${ignore_dirs[@]} " =~ " ${dir_name} " ]]; then
+            read -p "Is '$dir_name' the component name? (y/n): " answer
+            
+            if [[ "$answer" == "y" ]]; then
+                component_name="$dir_name"
+                break
+            fi
+        fi
+        
+        # Move to the parent directory
+        current_dir=$(dirname "$current_dir")
+    done
+
+    # If no known component name was found, prompt for manual entry
+    if [ -z "$component_name" ]; then
+        read -p "No valid component name found. Please enter the component name: " component_name
+    fi
+
+    echo "$component_name"
+    return 0
+}
+
+# Call the function
+get_component_name
