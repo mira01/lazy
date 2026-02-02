@@ -1,0 +1,22 @@
+#/bin/sh
+set -euo pipefail
+BRANCH=$(git branch --show-current)
+REMOTE=$(git remote -v | head -n 1 | cut -d ':' -f 2 | cut -d '.' -f 1)
+TOKEN=$(auth tokens/gitlab)
+
+if [ -z "$GITLAB_GQL_ENDPOINT" ]; then
+    echo "GITLAB_GQL_ENDPOINT env variable expected"
+    exit 1
+fi
+
+curl -X POST \
+  --header "Content-Type: application/json" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  --data "{
+    \"query\": \"query GetMergeRequest(\$projectId: ID!, \$sourceBranch: String!) { project(fullPath: \$projectId) { mergeRequests(first: 1, sourceBranches: [\$sourceBranch]) { nodes { webUrl } } } }\",
+    \"variables\": {
+      \"projectId\": \"${REMOTE}\",
+      \"sourceBranch\": \"${BRANCH}\"
+    }
+  }" \
+  $GITLAB_GQL_ENDPOINT | jq -r '.["data"]["project"]["mergeRequests"]["nodes"][]["webUrl"]'
