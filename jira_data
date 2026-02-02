@@ -1,11 +1,33 @@
 #!/bin/bash
-set -euo pipefail
 
-if [ "$#" -lt 1 ]; then
-    TICKET_ID=$(ticket);
-else
-    TICKET_ID=$1
+TICKET_ID=""
+OPTION=""
+
+usage() {
+    echo "Usage: $0 [TICKET_ID] [--option]"
+    echo "Example: $0 12345 --all"
+}
+
+for arg in "$@"; do
+    if [[ $arg == --* ]]; then
+        OPTION="$arg"
+    elif [[ -z "$TICKET_ID" ]]; then
+        TICKET_ID="$arg"
+    else
+        echo "Too many arguments provided."
+        usage
+        exit 1
+    fi
+done
+
+if [[ $OPTION == "--help" ]]; then
+    usage
+    exit 0
 fi
+
+# Output results
+TICKET_ID=${TICKET_ID:-$(ticket)}
+OPTION=${OPTION}
 
 if [ -z "$JIRA_URL" ]; then
     echo "JIRA_URL env variable expected"
@@ -15,10 +37,8 @@ if [ -z "$JIRA_USERNAME" ]; then
     echo "JIRA_USERNAME env variable expected"
     exit 1
 fi
-if [ -z "$JIRA_API_TOKEN" ]; then
-    echo "JIRA_API_TOKEN env variable expected"
-    exit 1
-fi
+
+JIRA_API_TOKEN=$(auth tokens/jira)
 API_ENDPOINT="/rest/api/2/issue/${TICKET_ID}?fields\=summary,description,assignee,reporter,priority,status,issuetype,created,updated"
 
 # Fetching ticket details
@@ -30,27 +50,30 @@ if [[ $(echo "$RESPONSE" | jq -r '.errorMessages | length') -ne 0 ]]; then
     exit 2
 fi
 
-# Extracting the ticket OUTPUT
-OUTPUT=$(echo "$RESPONSE" |
-    jq '
-{key: .key,
- summary: .fields.summary,
- type: .fields.issuetype.name,
- created: .fields.created,
- updated: .fields.updated,
- description: .fields.description,
- reporter: {
-   displayName: .fields.reporter.displayName,
-   email: .fields.reporter.emailAddress
- },
- assignee: {
-  displayName: .fields.assignee.displayName,
-  email: .fields.assignee.emailAddress
- },
- priority: .fields.priority.name,
- status: .fields.status.name
-}
-'
-)
+if [[ $OPTION == "--all" ]]; then
+    OUTPUT=$RESPONSE
+else
+    OUTPUT=$(echo "$RESPONSE" |
+        jq '
+    {key: .key,
+     summary: .fields.summary,
+     type: .fields.issuetype.name,
+     created: .fields.created,
+     updated: .fields.updated,
+     description: .fields.description,
+     reporter: {
+       displayName: .fields.reporter.displayName,
+       email: .fields.reporter.emailAddress
+     },
+     assignee: {
+      displayName: .fields.assignee.displayName,
+      email: .fields.assignee.emailAddress
+     },
+     priority: .fields.priority.name,
+     status: .fields.status.name
+    }
+    '
+    )
+fi
 
 echo $OUTPUT
