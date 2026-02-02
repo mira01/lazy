@@ -13,10 +13,15 @@ get_component_name() {
         
         # Check if the directory is in the ignore list
         if [[ ! " ${ignore_dirs[@]} " =~ " ${dir_name} " ]]; then
-            read -p "Is '$dir_name' the component name? (y/n): " answer
+            read -p "Is '$dir_name' the component name? (y/n/e): " answer
             
             if [[ "$answer" == "y" ]]; then
                 component_name="$dir_name"
+                break
+            fi
+
+            if [[ "$answer" == "e" ]]; then
+                read -p "Please enter the component name: " component_name
                 break
             fi
         fi
