@@ -1,0 +1,39 @@
+#!/bin/zsh
+set -euo pipefail
+
+declare -A STATUSES
+
+STATUSES[in_progress]="201"
+STATUSES[in_review]="241"
+STATUSES[done]="211"
+
+
+# Check if ticket_id argument is provided
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <ticket_id> <in_progress | in_review | done>"
+    exit 1
+fi
+TICKET_ID=$1
+STATUS=$2
+
+if [[ -v STATUSES[$STATUS] ]]; then
+    
+else
+    echo "Unknown status. Use one of ${(k)STATUSES}"
+    exit 1
+fi
+
+STATUS_ID=$STATUSES[${STATUS}]
+
+if [ -z "$JIRA_URL" ]; then
+    echo "JIRA_URL env variable expected"
+    exit 1
+fi
+if [ -z "$JIRA_USERNAME" ]; then
+    echo "JIRA_USERNAME env variable expected"
+    exit 1
+fi
+JIRA_API_TOKEN=$(auth tokens/jira)
+API_ENDPOINT="/rest/api/2/issue/${TICKET_ID}/transitions"
+
+curl -S -u "$JIRA_USERNAME:$JIRA_API_TOKEN" -X POST -H "Content-Type: application/json" -d "{\"transition\": {\"id\": $STATUS_ID}}" "$JIRA_URL$API_ENDPOINT"

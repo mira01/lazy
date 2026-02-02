@@ -8,9 +8,8 @@ fi
 
 TICKET=$1
 
-confirm echo 1\; echo 2\; echo 3
 confirm git co master\; git fetch\; git ff
 confirm set_ticket $TICKET
 confirm git co -b $(branch_name $TICKET)
 confirm git ci --allow-empty -m\"$(commit_message $TICKET)\"
-confirm into_progress $TICKET
+confirm jira_set_status $TICKET in_progress
