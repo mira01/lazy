@@ -1,0 +1,28 @@
+set -eo pipefail
+
+
+MR=$(merge_request_url)
+TOPIC=$(jira_data $(ticket) | jq -r '"#\(.key): \(.summary)"')
+MESSAGE="Hello @*bm-reviewers-rust*, may I ask for a review of $MR ?"
+
+if [ -z "$ZULIP_REVIEW_CHANNEL" ]; then
+    echo "ZULIP_USER env variable expected"
+    exit 1
+fi
+if [ -z "$ZULIP_USER" ]; then
+    echo "ZULIP_USER env variable expected"
+    exit 1
+fi
+if [ -z "$ZULIP_API_ENDPOINT" ]; then
+    echo "ZULIP_API_ENDPOINT env variable expected"
+    exit 1
+fi
+
+ZULIP_API_KEY=$(auth tokens/zulip)
+
+curl -X POST ${ZULIP_API_ENDPOINT} \
+    -u ${ZULIP_USER}:${ZULIP_API_KEY} \
+    --data-urlencode type=stream \
+    --data-urlencode to="${ZULIP_REVIEW_CHANNEL}" \
+    --data-urlencode topic="${TOPIC}" \
+    --data-urlencode content="${MESSAGE}"
