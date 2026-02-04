@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ "$#" -lt 1 ]; then
+    T0=$(log show --predicate '(processImagePath contains "configd") && (eventMessage contains "en0: SSID Braiins")' --style syslog --start $(date -I) | grep Braiins | head -n 1 | cut -f 1,2 -d ' ')
+else
+    HOURS_MINS=$1
+    T0=$(date +"%Y-%m-%dT")${HOURS_MINS}
+fi
+
+TIMESTAMP0=$(date -d "$T0" +%s.%N)
+CURRENT_TIMESTAMP=$(date +%s.%N)
+
+DIFFERENCE_IN_SECONDS=$(echo "$CURRENT_TIMESTAMP - $TIMESTAMP0" | bc)
+HOURS_PASSED=$(echo "scale=2; $DIFFERENCE_IN_SECONDS / 3600" | bc)
+
+echo "Hours passed since $T0" >&2
+echo "$HOURS_PASSED"
